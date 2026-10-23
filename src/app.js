@@ -274,7 +274,7 @@ async function mountSocial(){
   if(CFG.telegramBot&&$("#tgBtn")){
     window.onTelegramAuth=u=>socialPost("/api/auth/telegram",u);
     $("#tgBtn").innerHTML="";
-    loadScript("https://telegram.org/js/telegram-widget.js?22",{"data-telegram-login":CFG.telegramBot,"data-size":"large","data-radius":"20","data-onauth":"onTelegramAuth(user)","data-request-access":"write","data-lang":LANG},$("#tgBtn")).catch(()=>{});
+    loadScript("https://telegram.org/js/telegram-widget.js?22",{"data-telegram-login":CFG.telegramBot,"data-size":"large","data-radius":"20","data-onauth":"onTelegramAuth(user)","data-request-access":"write","data-userpic":"false","data-lang":LANG},$("#tgBtn")).catch(()=>{});
   }
 }
 
