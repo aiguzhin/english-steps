@@ -104,6 +104,7 @@ function limited(req) {
   return arr.length > 20;
 }
 function needDb(req, res, next) {
+  if (pool && !dbReady) return res.status(503).json({ error: "База данных запускается, попробуйте через минуту / Database is starting, try again in a minute" });
   if (!pool) return res.status(503).json({ error: "Database is not configured" });
   next();
 }
@@ -181,6 +182,13 @@ app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
 app.use(express.static(path.join(__dirname, "public"), { maxAge: "5m" }));
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
-migrate()
-  .then(() => app.listen(PORT, () => console.log(`English Steps listening on ${PORT} (db: ${pool ? "on" : "off"})`)))
-  .catch((e) => { console.error("Migration failed", e); process.exit(1); });
+let dbReady = false;
+async function migrateWithRetry() {
+  if (!pool) return;
+  try { await migrate(); dbReady = true; console.log("Database ready"); }
+  catch (e) { console.error("Database not ready, retrying in 30s:", e.message); setTimeout(migrateWithRetry, 30000); }
+}
+app.listen(PORT, () => {
+  console.log(`English Steps listening on ${PORT} (db: ${pool ? "on" : "off"})`);
+  migrateWithRetry();
+});
