@@ -14,6 +14,14 @@ const html = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="English A1–C1: grammar, exercises, homework, YouTube videos with questions. Английский от A1 до C1.">
 <link rel="icon" href="${favicon}">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#F27B9B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="English Steps">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>if(/tgWebApp/.test(location.hash+location.search))document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\\/script>');</script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 ${src("head.html")}
 </head>
@@ -45,4 +53,5 @@ fs.writeFileSync(path.join(__dirname, "public", "terms.html"), page("Terms of Se
 <h1>Terms of Service / Условия использования</h1>
 <p>English Steps is a free educational website for learning English. Use it for personal learning. Videos are hosted on YouTube and belong to their authors. The service is provided «as is» without guarantees. We may update the content and these terms at any time.</p>
 <p>English Steps — бесплатный сайт для изучения английского. Пользуйтесь им для личного обучения. Видео размещены на YouTube и принадлежат их авторам. Сайт предоставляется «как есть».</p>`));
+for (const f of fs.readdirSync(path.join(__dirname, "static"))) fs.copyFileSync(path.join(__dirname, "static", f), path.join(__dirname, "public", f));
 console.log("Built public/index.html", (html.length / 1024).toFixed(1) + " KB");

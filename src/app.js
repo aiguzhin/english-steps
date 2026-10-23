@@ -15,7 +15,7 @@ testTitle:"Тест на уровень",testIntro:"15 вопросов от A1 
 finish:"Узнать мой уровень",score:"Верных ответов",startAt:"Начните с уровня",fastTip:", а темы, которые знаете, проходите быстро — сразу через упражнения",goLevel:"Перейти к уровню",
 footer:"Видео принадлежат их авторам и открываются на YouTube.",saveLocal:"Прогресс сохраняется в этом браузере. Войдите, чтобы он сохранялся в аккаунте.",saveCloud:"Прогресс сохраняется в вашем аккаунте.",
 authTitleIn:"Вход",authTitleUp:"Регистрация",user:"Логин",pass:"Пароль",name:"Ваше имя",haveAcc:"Уже есть аккаунт? Войти",noAcc:"Нет аккаунта? Зарегистрироваться",
-submitIn:"Войти",submitUp:"Создать аккаунт",close:"Закрыть",errShort:"Логин от 3 символов, пароль от 6.",saved:"Сохранено",hello:"Привет",themes:"Тема",or:"или с логином и паролем",social:"Быстрый вход",guest:"Гость",menu:"Меню",back:"Назад",mProfile:"Профиль",mProgress:"Прогресс",mSettings:"Настройки",saveBtn:"Сохранить",byPass:"Логин и пароль",loginWith:"Способ входа",since:"С нами с",levelNow:"Уровень по тесту",stTopics:"темы пройдены",stEx:"упражнений верно",stHw:"домашек сделано",stLessons:"уроков курса",stTopicsShort:"тем",testRes:"Результат теста на уровень",theme:"Тема оформления",language:"Язык",introAnim:"Анимация при входе",introDesc:"Показывать сердечки с приветствием",gateSubIn:"Войдите, чтобы прогресс сохранялся на любом устройстве",gateSubUp:"Создайте аккаунт — это займёт полминуты"},
+submitIn:"Войти",submitUp:"Создать аккаунт",close:"Закрыть",errShort:"Логин от 3 символов, пароль от 6.",saved:"Сохранено",hello:"Привет",themes:"Тема",or:"или с логином и паролем",social:"Быстрый вход",guest:"Гость",menu:"Меню",back:"Назад",mProfile:"Профиль",mProgress:"Прогресс",mSettings:"Настройки",saveBtn:"Сохранить",byPass:"Логин и пароль",loginWith:"Способ входа",since:"С нами с",levelNow:"Уровень по тесту",stTopics:"темы пройдены",stEx:"упражнений верно",stHw:"домашек сделано",stLessons:"уроков курса",stTopicsShort:"тем",testRes:"Результат теста на уровень",theme:"Тема оформления",language:"Язык",introAnim:"Анимация при входе",introDesc:"Показывать сердечки с приветствием",gateSubIn:"Войдите, чтобы прогресс сохранялся на любом устройстве",install:"Установить приложение",installIos:"На iPhone: нажмите «Поделиться» внизу Safari, затем «На экран «Домой»».",installOther:"Откройте меню браузера (⋮) и выберите «Установить приложение» или «Добавить на главный экран».",installed:"Приложение уже установлено",openBot:"Открыть в Telegram",gateSubUp:"Создайте аккаунт — это займёт полминуты"},
 en:{brand:"English Steps",tagline:"A1 → C1: grammar, exercises, homework, videos",test:"Take the placement test",testShort:"Test",login:"Log in",logout:"Log out",
 tTopics:"Topics & grammar",tVideos:"Videos with questions",tCourse:"Course programme",done:"Exercises completed",
 theory:"Theory",ex:"Exercises",hw:"Homework",findVid:"Find video lessons on this topic on YouTube",
@@ -31,7 +31,7 @@ testTitle:"Placement test",testIntro:"15 questions from A1 to C1. Answer without
 finish:"Show my level",score:"Correct answers",startAt:"Start at level",fastTip:" and go through topics you already know quickly, straight to the exercises",goLevel:"Go to level",
 footer:"Videos belong to their authors and open on YouTube.",saveLocal:"Progress is saved in this browser. Log in to save it to your account.",saveCloud:"Progress is saved to your account.",
 authTitleIn:"Log in",authTitleUp:"Sign up",user:"Username",pass:"Password",name:"Your name",haveAcc:"Already have an account? Log in",noAcc:"No account? Sign up",
-submitIn:"Log in",submitUp:"Create account",close:"Close",errShort:"Username needs 3+ characters, password 6+.",saved:"Saved",hello:"Hi",themes:"Topic",or:"or with username and password",social:"Quick sign-in",guest:"Guest",menu:"Menu",back:"Back",mProfile:"Profile",mProgress:"Progress",mSettings:"Settings",saveBtn:"Save",byPass:"Username and password",loginWith:"Sign-in method",since:"Member since",levelNow:"Level from the test",stTopics:"topics done",stEx:"exercises correct",stHw:"homework done",stLessons:"course lessons",stTopicsShort:"topics",testRes:"Placement test result",theme:"Theme",language:"Language",introAnim:"Welcome animation",introDesc:"Show the hearts greeting",gateSubIn:"Log in to keep your progress on any device",gateSubUp:"Create an account — it takes half a minute"}
+submitIn:"Log in",submitUp:"Create account",close:"Close",errShort:"Username needs 3+ characters, password 6+.",saved:"Saved",hello:"Hi",themes:"Topic",or:"or with username and password",social:"Quick sign-in",guest:"Guest",menu:"Menu",back:"Back",mProfile:"Profile",mProgress:"Progress",mSettings:"Settings",saveBtn:"Save",byPass:"Username and password",loginWith:"Sign-in method",since:"Member since",levelNow:"Level from the test",stTopics:"topics done",stEx:"exercises correct",stHw:"homework done",stLessons:"course lessons",stTopicsShort:"topics",testRes:"Placement test result",theme:"Theme",language:"Language",introAnim:"Welcome animation",introDesc:"Show the hearts greeting",gateSubIn:"Log in to keep your progress on any device",install:"Install the app",installIos:"On iPhone: tap «Share» at the bottom of Safari, then «Add to Home Screen».",installOther:"Open the browser menu (⋮) and choose «Install app» or «Add to Home screen».",installed:"The app is already installed",openBot:"Open in Telegram",gateSubUp:"Create an account — it takes half a minute"}
 };
 let LANG="ru"; try{LANG=localStorage.getItem("stupeni-lang")||"ru";}catch(e){}
 const T=k=>UI[LANG][k]||UI.ru[k]||k;
@@ -278,6 +278,19 @@ async function mountSocial(){
   }
 }
 
+// ---------- app: Telegram Mini App + installable PWA ----------
+const TGA=(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.initData)?Telegram.WebApp:null;
+if(TGA){ try{TGA.ready();TGA.expand();TGA.setHeaderColor&&TGA.setHeaderColor("#FFF5F7");TGA.setBackgroundColor&&TGA.setBackgroundColor("#FFF5F7");}catch(e){} document.documentElement.classList.add("in-tg"); }
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;});
+const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+if("serviceWorker" in navigator&&!TGA&&location.protocol==="https:") window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+async function installApp(){
+  if(installEvt){installEvt.prompt();try{await installEvt.userChoice;}catch(e){}installEvt=null;return null;}
+  return isStandalone()?T("installed"):(isIOS()?T("installIos"):T("installOther"));
+}
+
 // ---------- gate: sign-in screen after the intro ----------
 let authMode="in", introDone=false, authChecked=false;
 function maybeGate(){ if(introDone&&authChecked&&API&&!ME) showGate(); }
@@ -314,6 +327,7 @@ async function initAuth(){
   try{const h=await fetch("/api/health",{credentials:"same-origin"});API=h.ok&&(await h.json()).ok===true;}catch(e){API=false;}
   if(API){try{CFG=await api("/api/config");}catch(e){}}
   if(API){try{const r=await api("/api/me");if(r.user){ME=r.user;mergeProgress(r.progress);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}pushProgress();}}catch(e){}}
+  if(API&&!ME&&TGA&&CFG.telegramBot){try{const r=await api("/api/auth/telegram-webapp",{method:"POST",body:JSON.stringify({initData:TGA.initData})});ME=r.user;mergeProgress(r.progress);save();await pushProgress();}catch(e){}}
   authChecked=true; renderHeader(); route(); maybeGate();
 }
 function setLang(l){LANG=l;try{localStorage.setItem("stupeni-lang",LANG);}catch(e){}renderHeader();route();}
@@ -337,6 +351,8 @@ function renderDrawer(){
       <button data-go="progress"><i>♥</i>${T("mProgress")}</button>
       <button data-go="settings"><i>✿</i>${T("mSettings")}</button>
       <button data-act="test"><i>✎</i>${T("test")}</button>
+      ${!TGA&&!isStandalone()?`<button data-act="install"><i>⇩</i>${T("install")}</button><p class="note" id="instNote" hidden></p>`:""}
+      ${!TGA&&CFG.telegramBot?`<a class="dr-link" href="https://t.me/${esc(CFG.telegramBot)}" target="_blank" rel="noopener"><i>✈</i>${T("openBot")}</a>`:""}
       ${API?(ME?`<button data-act="logout" class="danger"><i>⎋</i>${T("logout")}</button>`:`<button data-act="login"><i>→</i>${T("login")}</button>`):""}
     </nav>`;
   } else if(v==="profile"){
@@ -360,7 +376,7 @@ function renderDrawer(){
   box.innerHTML=head+`<div class="dr-body">${body}</div>`;
   $("#drX").onclick=closeDrawer; const bk=$("#drBack"); if(bk) bk.onclick=()=>{drawerView="menu";renderDrawer();};
   box.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{drawerView=b.dataset.go;renderDrawer();});
-  box.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{const a=b.dataset.act;if(a==="test"){closeDrawer();go("test");}else if(a==="logout")logout();else if(a==="login"){closeDrawer();showGate("in");}});
+  box.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{const a=b.dataset.act;if(a==="test"){closeDrawer();go("test");}else if(a==="logout")logout();else if(a==="login"){closeDrawer();showGate("in");}else if(a==="install"){installApp().then(msg=>{const n=$("#instNote");if(msg&&n){n.textContent=msg;n.hidden=false;}});}});
   box.querySelectorAll(".lvrow").forEach(b=>b.onclick=()=>{closeDrawer();view.tab="topics";go(b.dataset.lv.toLowerCase());});
   box.querySelectorAll(".skinopt").forEach(b=>b.onclick=()=>{applySkin(b.dataset.s,true);renderDrawer();});
   box.querySelectorAll(".seg2 button").forEach(b=>b.onclick=()=>{setLang(b.dataset.l);renderDrawer();});

@@ -268,6 +268,62 @@ app.post("/api/auth/telegram", needDb, async (req, res) => {
     usernameBase: d.username || d.first_name, displayName: d.first_name });
 });
 
+// --- Telegram Mini App (open the site inside the bot) ---
+const SITE_URL = (process.env.SITE_URL || process.env.RENDER_EXTERNAL_URL || "").replace(/\/$/, "");
+const TG_SECRET = TELEGRAM_BOT_TOKEN ? crypto.createHash("sha256").update("wh" + TELEGRAM_BOT_TOKEN).digest("hex").slice(0, 32) : "";
+
+app.post("/api/auth/telegram-webapp", needDb, async (req, res) => {
+  if (!TELEGRAM_BOT_TOKEN) return res.status(503).json({ error: "Telegram is not configured" });
+  const initData = String(req.body.initData || "");
+  if (!initData || initData.length > 4096) return res.status(400).json({ error: "Bad data" });
+  const params = new URLSearchParams(initData);
+  const hash = params.get("hash") || "";
+  params.delete("hash");
+  const dcs = [...params.entries()].map(([k, v]) => `${k}=${v}`).sort().join("\n");
+  const secret = crypto.createHmac("sha256", "WebAppData").update(TELEGRAM_BOT_TOKEN).digest();
+  const check = crypto.createHmac("sha256", secret).update(dcs).digest("hex");
+  if (hash.length !== check.length || !crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(check)))
+    return res.status(401).json({ error: "Telegram не подтвердил вход / Telegram sign-in failed" });
+  if (Date.now() / 1000 - Number(params.get("auth_date")) > 86400) return res.status(401).json({ error: "Session expired, reopen the app" });
+  let u; try { u = JSON.parse(params.get("user") || "{}"); } catch (e) { u = {}; }
+  if (!u.id) return res.status(400).json({ error: "No user" });
+  await socialLogin(req, res, "telegram_id", Number(u.id), { usernameBase: u.username || u.first_name, displayName: u.first_name });
+});
+
+async function tg(method, body) {
+  const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  const j = await r.json().catch(() => ({}));
+  if (!j.ok) console.error("Telegram", method, j.description || r.status);
+  return j;
+}
+function openButton(text) { return { inline_keyboard: [[{ text, web_app: { url: SITE_URL } }]] }; }
+
+app.post("/api/tg/webhook", async (req, res) => {
+  if (!TG_SECRET || req.get("X-Telegram-Bot-Api-Secret-Token") !== TG_SECRET) return res.sendStatus(403);
+  res.json({ ok: true });
+  const m = req.body && req.body.message;
+  if (!m || !m.chat) return;
+  const name = (m.from && m.from.first_name) || "";
+  const ru = !m.from || !m.from.language_code || m.from.language_code.startsWith("ru") || m.from.language_code.startsWith("kk");
+  const text = ru
+    ? `Привет${name ? ", " + name : ""}! 💗\n\n«Ступени английского» — английский от A1 до C1: грамматика, упражнения с проверкой, домашка и видео с вопросами.\n\nНажми кнопку ниже, чтобы открыть приложение. Прогресс сохраняется автоматически.`
+    : `Hi${name ? ", " + name : ""}! 💗\n\nEnglish Steps — English from A1 to C1: grammar, self-checking exercises, homework and videos with questions.\n\nTap the button below to open the app. Your progress is saved automatically.`;
+  tg("sendMessage", { chat_id: m.chat.id, text, reply_markup: openButton(ru ? "💗 Открыть приложение" : "💗 Open the app") }).catch(() => {});
+});
+
+async function setupTelegramBot() {
+  if (!TELEGRAM_BOT_TOKEN || !SITE_URL) return;
+  try {
+    await tg("setChatMenuButton", { menu_button: { type: "web_app", text: "Открыть", web_app: { url: SITE_URL } } });
+    await tg("setMyCommands", { commands: [{ command: "start", description: "Открыть приложение / Open the app" }] });
+    await tg("setMyShortDescription", { short_description: "Английский от A1 до C1 — уроки, упражнения, видео 💗" });
+    await tg("setMyDescription", { description: "Ступени английского: грамматика, упражнения с проверкой, домашние задания и видео с вопросами для уровней A1–C1. Нажмите «Открыть», чтобы начать." });
+    await tg("setWebhook", { url: `${SITE_URL}/api/tg/webhook`, secret_token: TG_SECRET, allowed_updates: ["message"], drop_pending_updates: true });
+    console.log("Telegram bot configured for", SITE_URL);
+  } catch (e) { console.error("Telegram setup failed", e.message); }
+}
+
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
 app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname, "public", "privacy.html")));
 app.get("/terms", (req, res) => res.sendFile(path.join(__dirname, "public", "terms.html")));
@@ -283,4 +339,5 @@ async function migrateWithRetry() {
 app.listen(PORT, () => {
   console.log(`English Steps listening on ${PORT} (db: ${pool ? "on" : "off"})`);
   migrateWithRetry();
+  setupTelegramBot();
 });
