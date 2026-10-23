@@ -269,6 +269,8 @@ app.post("/api/auth/telegram", needDb, async (req, res) => {
 });
 
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));
+app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname, "public", "privacy.html")));
+app.get("/terms", (req, res) => res.sendFile(path.join(__dirname, "public", "terms.html")));
 app.use(express.static(path.join(__dirname, "public"), { maxAge: "5m" }));
 app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
