@@ -252,7 +252,9 @@ footer{color:var(--muted);font-size:.82rem;padding-block:0 32px}
 footer{text-align:center}
 .social{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
 .social #gBtn,.social #tgBtn{min-height:40px;display:flex;justify-content:center}
-.social iframe{color-scheme:light!important;background:transparent!important;border:0!important;border-radius:20px}
+.social #tgBtn{display:inline-flex;border-radius:22px;overflow:hidden;isolation:isolate;line-height:0;background:transparent}
+.social #tgBtn:empty{display:none}
+.social iframe{color-scheme:light dark!important;background:transparent!important;border:0!important;border-radius:22px;display:block}
 .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem;margin:6px 0 4px}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 /* skin picker */
