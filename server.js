@@ -43,6 +43,14 @@ async function migrate() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  await pool.query(`
+    ALTER TABLE ${q("users")} ALTER COLUMN password_hash DROP NOT NULL;
+    ALTER TABLE ${q("users")} ADD COLUMN IF NOT EXISTS google_sub TEXT;
+    ALTER TABLE ${q("users")} ADD COLUMN IF NOT EXISTS telegram_id BIGINT;
+    ALTER TABLE ${q("users")} ADD COLUMN IF NOT EXISTS email TEXT;
+    CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub ON ${q("users")} (google_sub) WHERE google_sub IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS users_telegram_id ON ${q("users")} (telegram_id) WHERE telegram_id IS NOT NULL;
+  `);
   await pool.query(`DELETE FROM ${q("sessions")} WHERE expires_at < now()`);
 }
 
@@ -84,7 +92,7 @@ async function currentUser(req) {
   const sid = parseCookies(req).sid;
   if (!sid || !/^[a-f0-9]{64}$/.test(sid)) return null;
   const r = await pool.query(
-    `SELECT u.id, u.username, u.display_name FROM ${q("sessions")} s JOIN ${q("users")} u ON u.id = s.user_id
+    `SELECT u.id, u.username, u.display_name, u.created_at, u.google_sub, u.telegram_id FROM ${q("sessions")} s JOIN ${q("users")} u ON u.id = s.user_id
      WHERE s.token = $1 AND s.expires_at > now()`, [sid]);
   return r.rows[0] || null;
 }
@@ -92,7 +100,8 @@ async function getProgress(userId) {
   const r = await pool.query(`SELECT data FROM ${q("progress")} WHERE user_id = $1`, [userId]);
   return r.rows[0] ? r.rows[0].data : null;
 }
-const publicUser = (u) => ({ username: u.username, display_name: u.display_name });
+const publicUser = (u) => ({ username: u.username, display_name: u.display_name, created_at: u.created_at,
+  provider: u.google_sub ? "google" : u.telegram_id ? "telegram" : "password" });
 
 // simple in-memory rate limit for auth endpoints
 const hits = new Map();
@@ -129,7 +138,7 @@ app.post("/api/register", needDb, async (req, res) => {
   try {
     const hash = await bcrypt.hash(password, 10);
     const r = await pool.query(
-      `INSERT INTO ${q("users")} (username, password_hash, display_name) VALUES ($1, $2, $3) RETURNING id, username, display_name`,
+      `INSERT INTO ${q("users")} (username, password_hash, display_name) VALUES ($1, $2, $3) RETURNING id, username, display_name, created_at, google_sub, telegram_id`,
       [username, hash, display_name]);
     const user = r.rows[0];
     await pool.query(`INSERT INTO ${q("progress")} (user_id, data) VALUES ($1, '{}'::jsonb) ON CONFLICT DO NOTHING`, [user.id]);
@@ -146,9 +155,9 @@ app.post("/api/login", needDb, async (req, res) => {
   if (limited(req)) return res.status(429).json({ error: "Too many attempts. Try again later." });
   const username = String(req.body.username || "").trim();
   const password = String(req.body.password || "");
-  const r = await pool.query(`SELECT id, username, display_name, password_hash FROM ${q("users")} WHERE lower(username) = lower($1)`, [username]);
+  const r = await pool.query(`SELECT id, username, display_name, password_hash, created_at, google_sub, telegram_id FROM ${q("users")} WHERE lower(username) = lower($1)`, [username]);
   const user = r.rows[0];
-  if (!user || !(await bcrypt.compare(password, user.password_hash)))
+  if (!user || !user.password_hash || !(await bcrypt.compare(password, user.password_hash)))
     return res.status(401).json({ error: "Неверный логин или пароль / Wrong username or password" });
   setSession(req, res, await createSession(user.id));
   res.json({ user: publicUser(user), progress: await getProgress(user.id) });
@@ -167,6 +176,14 @@ app.get("/api/me", needDb, async (req, res) => {
   res.json({ user: publicUser(user), progress: await getProgress(user.id) });
 });
 
+app.put("/api/profile", needDb, async (req, res) => {
+  const user = await currentUser(req);
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  const name = String(req.body.display_name || "").trim().slice(0, 40) || null;
+  const r = await pool.query(`UPDATE ${q("users")} SET display_name = $1 WHERE id = $2 RETURNING id, username, display_name, created_at, google_sub, telegram_id`, [name, user.id]);
+  res.json({ user: publicUser(r.rows[0]) });
+});
+
 app.put("/api/progress", needDb, async (req, res) => {
   const user = await currentUser(req);
   if (!user) return res.status(401).json({ error: "Not logged in" });
@@ -177,6 +194,78 @@ app.put("/api/progress", needDb, async (req, res) => {
     `INSERT INTO ${q("progress")} (user_id, data, updated_at) VALUES ($1, $2, now())
      ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`, [user.id, data]);
   res.json({ ok: true });
+});
+
+
+// --- social login (Google, Telegram) ---
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const TELEGRAM_BOT_NAME = (process.env.TELEGRAM_BOT_NAME || "").replace(/^@/, "");
+
+app.get("/api/config", (req, res) => {
+  res.json({ googleClientId: GOOGLE_CLIENT_ID || null, telegramBot: TELEGRAM_BOT_TOKEN && TELEGRAM_BOT_NAME ? TELEGRAM_BOT_NAME : null });
+});
+
+async function uniqueUsername(base) {
+  let b = String(base || "user").toLowerCase().replace(/[^a-z0-9_.\-а-яё]/gi, "").slice(0, 24) || "user";
+  if (b.length < 3) b = b + "_user";
+  for (let i = 0; i < 20; i++) {
+    const cand = i === 0 ? b : `${b}${Math.floor(1000 + Math.random() * 9000)}`;
+    const r = await pool.query(`SELECT 1 FROM ${q("users")} WHERE lower(username) = lower($1)`, [cand]);
+    if (!r.rowCount) return cand;
+  }
+  return `${b}${crypto.randomBytes(3).toString("hex")}`;
+}
+async function socialLogin(req, res, field, value, info) {
+  let r = await pool.query(`SELECT id, username, display_name, created_at, google_sub, telegram_id FROM ${q("users")} WHERE ${field} = $1`, [value]);
+  let user = r.rows[0];
+  if (!user) {
+    const username = await uniqueUsername(info.usernameBase);
+    r = await pool.query(
+      `INSERT INTO ${q("users")} (username, password_hash, display_name, ${field}, email) VALUES ($1, NULL, $2, $3, $4) RETURNING id, username, display_name, created_at, google_sub, telegram_id`,
+      [username, (info.displayName || "").slice(0, 40) || null, value, info.email || null]);
+    user = r.rows[0];
+    await pool.query(`INSERT INTO ${q("progress")} (user_id, data) VALUES ($1, '{}'::jsonb) ON CONFLICT DO NOTHING`, [user.id]);
+  }
+  setSession(req, res, await createSession(user.id));
+  res.json({ user: publicUser(user), progress: await getProgress(user.id) });
+}
+
+app.post("/api/auth/google", needDb, async (req, res) => {
+  if (!GOOGLE_CLIENT_ID) return res.status(503).json({ error: "Google login is not configured" });
+  if (limited(req)) return res.status(429).json({ error: "Too many attempts. Try again later." });
+  const credential = String(req.body.credential || "");
+  if (!credential || credential.length > 5000) return res.status(400).json({ error: "Bad credential" });
+  try {
+    const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(credential));
+    const t = await r.json();
+    if (!r.ok || t.aud !== GOOGLE_CLIENT_ID || !["accounts.google.com", "https://accounts.google.com"].includes(t.iss) || !t.sub)
+      return res.status(401).json({ error: "Google не подтвердил вход / Google sign-in failed" });
+    if (Number(t.exp) * 1000 < Date.now()) return res.status(401).json({ error: "Token expired" });
+    const email = t.email_verified === "true" || t.email_verified === true ? t.email : null;
+    await socialLogin(req, res, "google_sub", t.sub, {
+      usernameBase: email ? email.split("@")[0] : t.given_name, displayName: t.given_name || t.name, email });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/auth/telegram", needDb, async (req, res) => {
+  if (!TELEGRAM_BOT_TOKEN) return res.status(503).json({ error: "Telegram login is not configured" });
+  if (limited(req)) return res.status(429).json({ error: "Too many attempts. Try again later." });
+  const d = req.body || {};
+  const hash = String(d.hash || "");
+  const fields = ["auth_date", "first_name", "id", "last_name", "photo_url", "username"]
+    .filter((k) => d[k] !== undefined && d[k] !== null && d[k] !== "")
+    .map((k) => `${k}=${d[k]}`).sort().join("\n");
+  const secret = crypto.createHash("sha256").update(TELEGRAM_BOT_TOKEN).digest();
+  const check = crypto.createHmac("sha256", secret).update(fields).digest("hex");
+  const okHash = hash.length === check.length && crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(check));
+  if (!okHash) return res.status(401).json({ error: "Telegram не подтвердил вход / Telegram sign-in failed" });
+  if (Date.now() / 1000 - Number(d.auth_date) > 86400) return res.status(401).json({ error: "Login expired, try again" });
+  await socialLogin(req, res, "telegram_id", Number(d.id), {
+    usernameBase: d.username || d.first_name, displayName: d.first_name });
 });
 
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found" }));

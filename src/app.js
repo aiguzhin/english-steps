@@ -1,6 +1,6 @@
 // ---------- i18n ----------
 const UI = {
-ru:{brand:"Ступени английского",tagline:"A1 → C1: грамматика, упражнения, домашка, видео",test:"Пройти тест на уровень",login:"Войти",logout:"Выйти",
+ru:{brand:"Ступени английского",tagline:"A1 → C1: грамматика, упражнения, домашка, видео",test:"Пройти тест на уровень",testShort:"Тест",login:"Войти",logout:"Выйти",
 tTopics:"Темы и грамматика",tVideos:"Видео с вопросами",tCourse:"Программа курса",done:"Пройдено упражнений",
 theory:"Теория",ex:"Упражнения",hw:"Домашнее задание",findVid:"Найти видео-уроки по этой теме на YouTube",
 howto:"Порядок работы: прочитайте теорию → сделайте упражнения (тема засчитывается, когда все ответы верные) → выполните домашнее задание письменно в тетради или заметках.",
@@ -15,8 +15,8 @@ testTitle:"Тест на уровень",testIntro:"15 вопросов от A1 
 finish:"Узнать мой уровень",score:"Верных ответов",startAt:"Начните с уровня",fastTip:", а темы, которые знаете, проходите быстро — сразу через упражнения",goLevel:"Перейти к уровню",
 footer:"Видео принадлежат их авторам и открываются на YouTube.",saveLocal:"Прогресс сохраняется в этом браузере. Войдите, чтобы он сохранялся в аккаунте.",saveCloud:"Прогресс сохраняется в вашем аккаунте.",
 authTitleIn:"Вход",authTitleUp:"Регистрация",user:"Логин",pass:"Пароль",name:"Ваше имя",haveAcc:"Уже есть аккаунт? Войти",noAcc:"Нет аккаунта? Зарегистрироваться",
-submitIn:"Войти",submitUp:"Создать аккаунт",close:"Закрыть",errShort:"Логин от 3 символов, пароль от 6.",saved:"Сохранено",hello:"Привет",themes:"Тема"},
-en:{brand:"English Steps",tagline:"A1 → C1: grammar, exercises, homework, videos",test:"Take the placement test",login:"Log in",logout:"Log out",
+submitIn:"Войти",submitUp:"Создать аккаунт",close:"Закрыть",errShort:"Логин от 3 символов, пароль от 6.",saved:"Сохранено",hello:"Привет",themes:"Тема",or:"или с логином и паролем",social:"Быстрый вход",guest:"Гость",menu:"Меню",back:"Назад",mProfile:"Профиль",mProgress:"Прогресс",mSettings:"Настройки",saveBtn:"Сохранить",byPass:"Логин и пароль",loginWith:"Способ входа",since:"С нами с",levelNow:"Уровень по тесту",stTopics:"темы пройдены",stEx:"упражнений верно",stHw:"домашек сделано",stLessons:"уроков курса",stTopicsShort:"тем",testRes:"Результат теста на уровень",theme:"Тема оформления",language:"Язык",introAnim:"Анимация при входе",introDesc:"Показывать сердечки с приветствием",gateSubIn:"Войдите, чтобы прогресс сохранялся на любом устройстве",gateSubUp:"Создайте аккаунт — это займёт полминуты"},
+en:{brand:"English Steps",tagline:"A1 → C1: grammar, exercises, homework, videos",test:"Take the placement test",testShort:"Test",login:"Log in",logout:"Log out",
 tTopics:"Topics & grammar",tVideos:"Videos with questions",tCourse:"Course programme",done:"Exercises completed",
 theory:"Theory",ex:"Exercises",hw:"Homework",findVid:"Find video lessons on this topic on YouTube",
 howto:"How to work: read the theory → do the exercises (a topic counts as done when all answers are correct) → do the homework in writing.",
@@ -31,7 +31,7 @@ testTitle:"Placement test",testIntro:"15 questions from A1 to C1. Answer without
 finish:"Show my level",score:"Correct answers",startAt:"Start at level",fastTip:" and go through topics you already know quickly, straight to the exercises",goLevel:"Go to level",
 footer:"Videos belong to their authors and open on YouTube.",saveLocal:"Progress is saved in this browser. Log in to save it to your account.",saveCloud:"Progress is saved to your account.",
 authTitleIn:"Log in",authTitleUp:"Sign up",user:"Username",pass:"Password",name:"Your name",haveAcc:"Already have an account? Log in",noAcc:"No account? Sign up",
-submitIn:"Log in",submitUp:"Create account",close:"Close",errShort:"Username needs 3+ characters, password 6+.",saved:"Saved",hello:"Hi",themes:"Topic"}
+submitIn:"Log in",submitUp:"Create account",close:"Close",errShort:"Username needs 3+ characters, password 6+.",saved:"Saved",hello:"Hi",themes:"Topic",or:"or with username and password",social:"Quick sign-in",guest:"Guest",menu:"Menu",back:"Back",mProfile:"Profile",mProgress:"Progress",mSettings:"Settings",saveBtn:"Save",byPass:"Username and password",loginWith:"Sign-in method",since:"Member since",levelNow:"Level from the test",stTopics:"topics done",stEx:"exercises correct",stHw:"homework done",stLessons:"course lessons",stTopicsShort:"topics",testRes:"Placement test result",theme:"Theme",language:"Language",introAnim:"Welcome animation",introDesc:"Show the hearts greeting",gateSubIn:"Log in to keep your progress on any device",gateSubUp:"Create an account — it takes half a minute"}
 };
 let LANG="ru"; try{LANG=localStorage.getItem("stupeni-lang")||"ru";}catch(e){}
 const T=k=>UI[LANG][k]||UI.ru[k]||k;
@@ -59,13 +59,6 @@ function applySkin(id,persist){SKIN=SKINS.some(x=>x.id===id)?id:"hearts";
   try{localStorage.setItem("stupeni-skin",SKIN);}catch(e){}
   if(persist&&typeof S!=="undefined"){S.skin=SKIN;save();}}
 applySkin(SKIN,false);
-function renderSkinMenu(){
-  $("#skinLbl").textContent=LANG==="en"?"Theme":"Тема";
-  $("#skinMenu").innerHTML=SKINS.map(k=>`<button class="skinopt" data-s="${k.id}" aria-pressed="${SKIN===k.id}"><span class="sw" style="background:${k.c}"></span>${LANG==="en"?k.en:k.ru}</button>`).join("");
-  $("#skinMenu").querySelectorAll(".skinopt").forEach(b=>b.onclick=()=>{applySkin(b.dataset.s,true);renderSkinMenu();route();});
-}
-function toggleSkinMenu(open){const m=$("#skinMenu");m.hidden=open===undefined?!m.hidden:!open;$("#skinBtn").setAttribute("aria-expanded",String(!m.hidden));}
-
 // ---------- state ----------
 const KEY="stupeni-v1";
 let S={ex:{},hw:{},test:null};
@@ -91,18 +84,15 @@ function topicStats(t){const r=S.ex[t.id]||{};const ok=t.ex.filter((_,i)=>r[i]==
 function levelProgress(L){let ok=0,tot=0;L.topics.forEach(t=>{const s=topicStats(t);ok+=s.ok;tot+=s.total;});return tot?ok/tot:0;}
 
 // ---------- header ----------
+const ICON_MENU=`<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+const initials=u=>((u&&(u.display_name||u.username))||"?").trim().charAt(0).toUpperCase();
 function renderHeader(){
   document.documentElement.lang=LANG;
   document.title=T("brand");
   $("#brand").innerHTML=`${T("brand")}<small>${T("tagline")}</small>`;
-  $("#testBtn").textContent=T("test");
-  $("#langBtn").innerHTML=`<span ${LANG==="ru"?'class="on"':''}>RU</span><span ${LANG==="en"?'class="on"':''}>EN</span>`;
-  $("#langBtn").setAttribute("aria-label",LANG==="ru"?"Switch to English":"Переключить на русский");
-  const a=$("#authArea");
-  if(!API){a.innerHTML="";}
-  else if(ME){a.innerHTML=`<span class="who">${T("hello")}, <b>${esc(ME.display_name||ME.username)}</b></span><button class="btn" id="logoutBtn">${T("logout")}</button>`;$("#logoutBtn").onclick=logout;}
-  else {a.innerHTML=`<button class="btn" id="loginBtn">${T("login")}</button>`;$("#loginBtn").onclick=()=>openAuth("in");}
-  renderSkinMenu();
+  $("#profileBtn").innerHTML=`<span class="ava">${ME?esc(initials(ME)):"♥"}</span><span class="pname">${ME?esc(ME.display_name||ME.username):T("guest")}</span>`;
+  $("#profileBtn").setAttribute("aria-label",T("mProfile"));
+  $("#menuBtn").innerHTML=ICON_MENU; $("#menuBtn").setAttribute("aria-label",T("menu"));
   $("#footer").textContent=(ME?T("saveCloud"):T("saveLocal"))+" "+T("footer");
 }
 
@@ -266,42 +256,126 @@ function renderTest(){
   };
 }
 
-// ---------- auth ----------
-let authMode="in";
-function openAuth(mode){authMode=mode;const d=$("#auth");d.hidden=false;renderAuth();setTimeout(()=>{const u=$("#au-user");u&&u.focus();},30);}
-function closeAuth(){$("#auth").hidden=true;}
-function renderAuth(){
+// ---------- social login ----------
+let CFG={googleClientId:null,telegramBot:null};
+function loadScript(src,attrs,parent){return new Promise((ok,fail)=>{const sc=document.createElement("script");sc.src=src;sc.async=true;Object.entries(attrs||{}).forEach(([k,v])=>sc.setAttribute(k,v));sc.onload=ok;sc.onerror=fail;(parent||document.head).appendChild(sc);});}
+async function socialPost(path,body){
+  try{const r=await api(path,{method:"POST",body:JSON.stringify(body)});ME=r.user;mergeProgress(r.progress);save();await pushProgress();closeAuth();renderHeader();route();}
+  catch(e){const el=$("#soc-err");if(el) el.textContent=e.message;}
+}
+let gisReady=null;
+async function mountSocial(){
+  if(CFG.googleClientId&&$("#gBtn")){
+    try{gisReady=gisReady||loadScript("https://accounts.google.com/gsi/client");await gisReady;
+      google.accounts.id.initialize({client_id:CFG.googleClientId,callback:r=>socialPost("/api/auth/google",{credential:r.credential})});
+      google.accounts.id.renderButton($("#gBtn"),{theme:"outline",size:"large",shape:"pill",text:"continue_with",width:300,locale:LANG});
+    }catch(e){}
+  }
+  if(CFG.telegramBot&&$("#tgBtn")){
+    window.onTelegramAuth=u=>socialPost("/api/auth/telegram",u);
+    $("#tgBtn").innerHTML="";
+    loadScript("https://telegram.org/js/telegram-widget.js?22",{"data-telegram-login":CFG.telegramBot,"data-size":"large","data-radius":"20","data-onauth":"onTelegramAuth(user)","data-request-access":"write","data-lang":LANG},$("#tgBtn")).catch(()=>{});
+  }
+}
+
+// ---------- gate: sign-in screen after the intro ----------
+let authMode="in", introDone=false, authChecked=false;
+function maybeGate(){ if(introDone&&authChecked&&API&&!ME) showGate(); }
+function showGate(mode){ authMode=mode||authMode; $("#gate").hidden=false; document.body.classList.add("locked"); renderGate(); }
+function hideGate(){ $("#gate").hidden=true; document.body.classList.remove("locked"); }
+const closeAuth=hideGate;
+function renderGate(){
   const up=authMode==="up";
-  $("#authBox").innerHTML=`<button class="x" id="authX" aria-label="${T("close")}">×</button><h2>${up?T("authTitleUp"):T("authTitleIn")}</h2>
+  $("#gateBox").innerHTML=`<div class="gate-top"><button class="langsw" id="gLang">${LANG==="ru"?"EN":"RU"}</button></div>
+  <div class="gate-logo" aria-hidden="true"></div>
+  <h1>${T("brand")}</h1><p class="gate-sub">${up?T("gateSubUp"):T("gateSubIn")}</p>
+  ${CFG.googleClientId||CFG.telegramBot?`<div class="social"><div id="gBtn"></div><div id="tgBtn"></div><p class="err" id="soc-err" aria-live="polite"></p></div><div class="divider"><span>${T("or")}</span></div>`:""}
   <form id="authForm" novalidate>
     ${up?`<label for="au-name">${T("name")}</label><input id="au-name" autocomplete="nickname" maxlength="40">`:""}
     <label for="au-user">${T("user")}</label><input id="au-user" autocomplete="username" autocapitalize="off" maxlength="32" required>
     <label for="au-pass">${T("pass")}</label><input id="au-pass" type="password" autocomplete="${up?'new-password':'current-password'}" required>
     <p class="err" id="au-err" aria-live="polite"></p>
-    <button class="btn primary" type="submit">${up?T("submitUp"):T("submitIn")}</button>
-  </form><button class="linkbtn" id="authSwitch">${up?T("haveAcc"):T("noAcc")}</button>`;
-  $("#authX").onclick=closeAuth;
-  $("#authSwitch").onclick=()=>{authMode=up?"in":"up";renderAuth();};
+    <button class="btn primary big" type="submit">${up?T("submitUp"):T("submitIn")}</button>
+  </form>
+  <button class="linkbtn switch" id="authSwitch">${up?T("haveAcc"):T("noAcc")}</button>`;
+  $("#gLang").onclick=()=>{setLang(LANG==="ru"?"en":"ru");renderGate();};
+  $("#authSwitch").onclick=()=>{authMode=up?"in":"up";renderGate();};
+  mountSocial();
   $("#authForm").onsubmit=async e=>{e.preventDefault();
     const username=$("#au-user").value.trim(), password=$("#au-pass").value, display_name=up?$("#au-name").value.trim():undefined;
     if(username.length<3||password.length<6){$("#au-err").textContent=T("errShort");return;}
     try{const r=await api(up?"/api/register":"/api/login",{method:"POST",body:JSON.stringify({username,password,display_name})});
-      ME=r.user; mergeProgress(r.progress); save(); await pushProgress(); closeAuth(); renderHeader(); route();
+      ME=r.user; mergeProgress(r.progress); save(); await pushProgress(); hideGate(); renderHeader(); route();
     }catch(err){$("#au-err").textContent=err.message;}
   };
 }
-async function logout(){try{await api("/api/logout",{method:"POST"});}catch(e){} ME=null; renderHeader();}
+async function logout(){try{await api("/api/logout",{method:"POST"});}catch(e){} ME=null; S={ex:{},hw:{},test:null}; try{localStorage.removeItem(KEY);}catch(e){} closeDrawer(); renderHeader(); route(); if(API) showGate("in");}
 async function initAuth(){
   try{const h=await fetch("/api/health",{credentials:"same-origin"});API=h.ok&&(await h.json()).ok===true;}catch(e){API=false;}
+  if(API){try{CFG=await api("/api/config");}catch(e){}}
   if(API){try{const r=await api("/api/me");if(r.user){ME=r.user;mergeProgress(r.progress);try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}pushProgress();}}catch(e){}}
-  renderHeader(); route();
+  authChecked=true; renderHeader(); route(); maybeGate();
+}
+function setLang(l){LANG=l;try{localStorage.setItem("stupeni-lang",LANG);}catch(e){}renderHeader();route();}
+
+// ---------- drawer: profile, progress, settings ----------
+let drawerView="menu";
+function openDrawer(v){drawerView=v||"menu";$("#drawer").hidden=false;document.body.classList.add("locked");renderDrawer();setTimeout(()=>$("#drawer").classList.add("open"),10);}
+function closeDrawer(){const d=$("#drawer");d.classList.remove("open");document.body.classList.remove("locked");setTimeout(()=>{d.hidden=true;},250);}
+function overall(){let ok=0,tot=0,td=0,tt=0;LEVELS.forEach(L=>L.topics.forEach(t=>{const s=topicStats(t);ok+=s.ok;tot+=s.total;tt++;if(s.done)td++;}));
+  const hw=Object.entries(S.hw||{}).filter(([k,v])=>v&&!k.startsWith("course:")&&!k.startsWith("vid:")).length;
+  const lessons=Object.entries(S.hw||{}).filter(([k,v])=>v&&k.startsWith("course:")).length;
+  return {ok,tot,td,tt,hw,lessons};}
+function renderDrawer(){
+  const box=$("#drawerBox"); const v=drawerView;
+  const head=`<div class="dr-head">${v!=="menu"?`<button class="iconbtn" id="drBack" aria-label="${T("back")}">‹</button>`:"<span></span>"}<b>${v==="menu"?T("menu"):T("m"+v.charAt(0).toUpperCase()+v.slice(1))}</b><button class="iconbtn" id="drX" aria-label="${T("close")}">×</button></div>`;
+  let body="";
+  if(v==="menu"){
+    body=`<div class="dr-user"><span class="ava big">${ME?esc(initials(ME)):"♥"}</span><div><b>${ME?esc(ME.display_name||ME.username):T("guest")}</b>${ME?`<span>@${esc(ME.username)}</span>`:""}</div></div>
+    <nav class="dr-nav">
+      <button data-go="profile"><i>☺</i>${T("mProfile")}</button>
+      <button data-go="progress"><i>♥</i>${T("mProgress")}</button>
+      <button data-go="settings"><i>✿</i>${T("mSettings")}</button>
+      <button data-act="test"><i>✎</i>${T("test")}</button>
+      ${API?(ME?`<button data-act="logout" class="danger"><i>⎋</i>${T("logout")}</button>`:`<button data-act="login"><i>→</i>${T("login")}</button>`):""}
+    </nav>`;
+  } else if(v==="profile"){
+    const prov=ME?(ME.provider==="google"?"Google":ME.provider==="telegram"?"Telegram":T("byPass")):"";
+    body=ME?`<div class="dr-user"><span class="ava big">${esc(initials(ME))}</span><div><b>${esc(ME.display_name||ME.username)}</b><span>@${esc(ME.username)}</span></div></div>
+    <form id="profForm" class="dr-form"><label for="pf-name">${T("name")}</label><input id="pf-name" maxlength="40" value="${esc(ME.display_name||"")}"><button class="btn primary" type="submit">${T("saveBtn")}</button><p class="note" id="pf-msg" aria-live="polite"></p></form>
+    <dl class="dr-facts"><dt>${T("loginWith")}</dt><dd>${prov}</dd>${ME.created_at?`<dt>${T("since")}</dt><dd>${new Date(ME.created_at).toLocaleDateString(LANG==="en"?"en-GB":"ru-RU",{day:"numeric",month:"long",year:"numeric"})}</dd>`:""}<dt>${T("levelNow")}</dt><dd>${S.test||"—"}</dd></dl>`
+    :`<p class="note">${T("saveLocal")}</p>`;
+  } else if(v==="progress"){
+    const o=overall(); const pc=o.tot?Math.round(o.ok/o.tot*100):0;
+    body=`<div class="ring" style="--p:${pc}"><span>${pc}%</span></div>
+    <div class="dr-stats"><div><b>${o.td}/${o.tt}</b><span>${T("stTopics")}</span></div><div><b>${o.ok}/${o.tot}</b><span>${T("stEx")}</span></div><div><b>${o.hw}</b><span>${T("stHw")}</span></div><div><b>${o.lessons}</b><span>${T("stLessons")}</span></div></div>
+    <div class="dr-levels">${LEVELS.map(L=>{const p=Math.round(levelProgress(L)*100);const d=L.topics.filter(t=>topicStats(t).done).length;return `<button class="lvrow" data-lv="${L.code}" style="--c:${lvColor(L.code)}"><b>${L.code}</b><span class="bar"><i style="width:${p}%"></i></span><span class="pc">${p}%</span><small>${d}/${L.topics.length} ${T("stTopicsShort")}</small></button>`;}).join("")}</div>
+    <p class="note">${T("testRes")}: <b>${S.test||"—"}</b></p>`;
+  } else if(v==="settings"){
+    const introOn=(()=>{try{return localStorage.getItem("stupeni-intro")!=="off";}catch(e){return true;}})();
+    body=`<h3>${T("theme")}</h3><div class="skins">${SKINS.map(k=>`<button class="skinopt" data-s="${k.id}" aria-pressed="${SKIN===k.id}"><span class="sw" style="background:${k.c}"></span>${LANG==="en"?k.en:k.ru}</button>`).join("")}</div>
+    <h3>${T("language")}</h3><div class="seg2"><button data-l="ru" aria-pressed="${LANG==="ru"}">Русский</button><button data-l="en" aria-pressed="${LANG==="en"}">English</button></div>
+    <h3>${T("introAnim")}</h3><label class="switchrow"><input type="checkbox" id="introTgl" ${introOn?"checked":""}><span>${T("introDesc")}</span></label>`;
+  }
+  box.innerHTML=head+`<div class="dr-body">${body}</div>`;
+  $("#drX").onclick=closeDrawer; const bk=$("#drBack"); if(bk) bk.onclick=()=>{drawerView="menu";renderDrawer();};
+  box.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{drawerView=b.dataset.go;renderDrawer();});
+  box.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{const a=b.dataset.act;if(a==="test"){closeDrawer();go("test");}else if(a==="logout")logout();else if(a==="login"){closeDrawer();showGate("in");}});
+  box.querySelectorAll(".lvrow").forEach(b=>b.onclick=()=>{closeDrawer();view.tab="topics";go(b.dataset.lv.toLowerCase());});
+  box.querySelectorAll(".skinopt").forEach(b=>b.onclick=()=>{applySkin(b.dataset.s,true);renderDrawer();});
+  box.querySelectorAll(".seg2 button").forEach(b=>b.onclick=()=>{setLang(b.dataset.l);renderDrawer();});
+  const it=$("#introTgl"); if(it) it.onchange=()=>{try{localStorage.setItem("stupeni-intro",it.checked?"on":"off");}catch(e){}};
+  const pf=$("#profForm"); if(pf) pf.onsubmit=async e=>{e.preventDefault();try{const r=await api("/api/profile",{method:"PUT",body:JSON.stringify({display_name:$("#pf-name").value.trim()})});ME=r.user;renderHeader();renderDrawer();$("#pf-msg").textContent=T("saved");}catch(err){$("#pf-msg").textContent=err.message;}};
 }
 
 // ---------- intro hearts ----------
 function intro(){
-  const o=$("#intro"); if(!o) return;
+  const o=$("#intro"); if(!o){introDone=true;return;}
+  let off=false; try{off=localStorage.getItem("stupeni-intro")==="off";}catch(e){}
+  if(off){o.remove();introDone=true;return;}
   const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const end=()=>{o.classList.add("bye");setTimeout(()=>o.remove(),700);};
+  let ended=false;
+  const end=()=>{if(ended)return;ended=true;o.classList.add("bye");setTimeout(()=>o.remove(),700);introDone=true;maybeGate();};
   o.onclick=end; document.addEventListener("keydown",function k(e){if(e.key==="Escape"){end();document.removeEventListener("keydown",k);}});
   setTimeout(()=>o.classList.add("s2"),reduce?1600:2400);
   setTimeout(end,reduce?3400:5200);
@@ -319,12 +393,9 @@ function route(){
   renderLadder();renderLevel();
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0});});
-$("#testBtn").onclick=()=>go("test");
-$("#skinBtn").onclick=e=>{e.stopPropagation();toggleSkinMenu();};
-document.addEventListener("click",e=>{if(!e.target.closest(".skinwrap"))toggleSkinMenu(false);});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")toggleSkinMenu(false);});
-$("#langBtn").onclick=()=>{LANG=LANG==="ru"?"en":"ru";try{localStorage.setItem("stupeni-lang",LANG);}catch(e){}renderHeader();route();};
-$("#auth").addEventListener("click",e=>{if(e.target.id==="auth")closeAuth();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#auth").hidden)closeAuth();});
+$("#menuBtn").onclick=()=>openDrawer("menu");
+$("#profileBtn").onclick=()=>{ if(API&&!ME) showGate("in"); else openDrawer("profile"); };
+$("#drawer").addEventListener("click",e=>{if(e.target.id==="drawer")closeDrawer();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#drawer").hidden)closeDrawer();});
 intro();
 renderHeader(); route(); initAuth();
