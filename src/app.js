@@ -45,6 +45,27 @@ const tEnSep=x=>tEn(x)?tEn(x)+" · ":"";
 const lvRu=L=>LANG==="en"?"":(" · "+L.ru);
 const lvGoal=L=>LANG==="en"?EN_LEVEL[L.code].goal:L.goal;
 
+// ---------- skins ----------
+const SKINS=[
+ {id:"hearts",ru:"Сердечки",en:"Hearts",c:"linear-gradient(135deg,#F27B9B,#C76BD9)"},
+ {id:"lavender",ru:"Лаванда",en:"Lavender",c:"#8B6CF0"},
+ {id:"mint",ru:"Мята",en:"Mint",c:"#2FA58A"},
+ {id:"peach",ru:"Персик",en:"Peach",c:"#F08A5D"},
+ {id:"light",ru:"Светлая",en:"Light",c:"#3B82C4"},
+ {id:"night",ru:"Ночь",en:"Night",c:"#2B2335"}];
+let SKIN="hearts"; try{SKIN=localStorage.getItem("stupeni-skin")||"hearts";}catch(e){}
+function applySkin(id,persist){SKIN=SKINS.some(x=>x.id===id)?id:"hearts";
+  if(SKIN==="hearts") document.documentElement.removeAttribute("data-skin"); else document.documentElement.setAttribute("data-skin",SKIN);
+  try{localStorage.setItem("stupeni-skin",SKIN);}catch(e){}
+  if(persist&&typeof S!=="undefined"){S.skin=SKIN;save();}}
+applySkin(SKIN,false);
+function renderSkinMenu(){
+  $("#skinLbl").textContent=LANG==="en"?"Theme":"Тема";
+  $("#skinMenu").innerHTML=SKINS.map(k=>`<button class="skinopt" data-s="${k.id}" aria-pressed="${SKIN===k.id}"><span class="sw" style="background:${k.c}"></span>${LANG==="en"?k.en:k.ru}</button>`).join("");
+  $("#skinMenu").querySelectorAll(".skinopt").forEach(b=>b.onclick=()=>{applySkin(b.dataset.s,true);renderSkinMenu();route();});
+}
+function toggleSkinMenu(open){const m=$("#skinMenu");m.hidden=open===undefined?!m.hidden:!open;$("#skinBtn").setAttribute("aria-expanded",String(!m.hidden));}
+
 // ---------- state ----------
 const KEY="stupeni-v1";
 let S={ex:{},hw:{},test:null};
@@ -57,7 +78,7 @@ function mergeProgress(server){
   if(!server) return; const m={ex:{},hw:{},test:server.test||S.test};
   const exKeys=new Set([...Object.keys(S.ex||{}),...Object.keys(server.ex||{})]);
   exKeys.forEach(k=>{const a=(S.ex||{})[k]||{},b=(server.ex||{})[k]||{};m.ex[k]={};new Set([...Object.keys(a),...Object.keys(b)]).forEach(i=>{m.ex[k][i]=a[i]===true||b[i]===true?true:(b[i]!==undefined?b[i]:a[i]);});});
-  m.hw=Object.assign({},S.hw||{},server.hw||{}); S=m;
+  m.hw=Object.assign({},S.hw||{},server.hw||{}); m.skin=server.skin||S.skin; S=m; if(S.skin) applySkin(S.skin,false);
 }
 
 const view={level:"A1",tab:"topics",topic:null,part:"theory"};
@@ -81,6 +102,7 @@ function renderHeader(){
   if(!API){a.innerHTML="";}
   else if(ME){a.innerHTML=`<span class="who">${T("hello")}, <b>${esc(ME.display_name||ME.username)}</b></span><button class="btn" id="logoutBtn">${T("logout")}</button>`;$("#logoutBtn").onclick=logout;}
   else {a.innerHTML=`<button class="btn" id="loginBtn">${T("login")}</button>`;$("#loginBtn").onclick=()=>openAuth("in");}
+  renderSkinMenu();
   $("#footer").textContent=(ME?T("saveCloud"):T("saveLocal"))+" "+T("footer");
 }
 
@@ -112,7 +134,7 @@ function renderTopics(L){
   if(!view.topic||!L.topics.find(t=>t.id===view.topic)) view.topic=L.topics[0].id;
   const t=L.topics.find(x=>x.id===view.topic);
   $("#pane").innerHTML=`<div class="grid">
-    <nav class="rail" aria-label="${T("tTopics")}">${L.topics.map((x,i)=>{const s=topicStats(x);return `<button class="topic ${s.done?'done':''}" data-id="${x.id}" aria-current="${x.id===t.id}"><span class="n">${s.done?'✓':String(i+1).padStart(2,'0')}</span><span class="t">${tTitle(x)}<span class="e">${tEnSep(x)}${s.ok}/${s.total}</span></span></button>`}).join("")}</nav>
+    <nav class="rail" aria-label="${T("tTopics")}">${L.topics.map((x,i)=>{const s=topicStats(x);return `<button class="topic ${s.done?'done':''}" data-id="${x.id}" aria-current="${x.id===t.id}"><span class="n">${s.done?'♥':String(i+1).padStart(2,'0')}</span><span class="t">${tTitle(x)}<span class="e">${tEnSep(x)}${s.ok}/${s.total}</span></span></button>`}).join("")}</nav>
     <article class="sheet" id="sheet"></article></div>`;
   document.querySelectorAll(".topic").forEach(b=>b.onclick=()=>{view.topic=b.dataset.id;view.part="theory";renderTopics(L);if(innerWidth<860)$("#sheet").scrollIntoView({behavior:"smooth",block:"start"});});
   renderSheet(L,t);
@@ -141,7 +163,7 @@ function renderSheet(L,t){
   }
 }
 function refreshRail(L){
-  document.querySelectorAll(".topic").forEach((b,i)=>{const x=L.topics[i];const s=topicStats(x);b.classList.toggle("done",s.done);b.querySelector(".n").textContent=s.done?"✓":String(i+1).padStart(2,"0");b.querySelector(".e").textContent=`${tEnSep(x)}${s.ok}/${s.total}`;});
+  document.querySelectorAll(".topic").forEach((b,i)=>{const x=L.topics[i];const s=topicStats(x);b.classList.toggle("done",s.done);b.querySelector(".n").textContent=s.done?"♥":String(i+1).padStart(2,"0");b.querySelector(".e").textContent=`${tEnSep(x)}${s.ok}/${s.total}`;});
 }
 
 // ---------- exercise engine ----------
@@ -298,6 +320,9 @@ function route(){
 }
 window.addEventListener("hashchange",()=>{route();window.scrollTo({top:0});});
 $("#testBtn").onclick=()=>go("test");
+$("#skinBtn").onclick=e=>{e.stopPropagation();toggleSkinMenu();};
+document.addEventListener("click",e=>{if(!e.target.closest(".skinwrap"))toggleSkinMenu(false);});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")toggleSkinMenu(false);});
 $("#langBtn").onclick=()=>{LANG=LANG==="ru"?"en":"ru";try{localStorage.setItem("stupeni-lang",LANG);}catch(e){}renderHeader();route();};
 $("#auth").addEventListener("click",e=>{if(e.target.id==="auth")closeAuth();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#auth").hidden)closeAuth();});
