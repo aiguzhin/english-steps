@@ -1,0 +1,19 @@
+{
+  "name": "english-steps",
+  "version": "1.0.0",
+  "description": "English A1–C1: grammar, exercises, homework, videos with questions, accounts with saved progress",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "2.4.3",
+    "express": "4.21.2",
+    "pg": "8.13.1"
+  }
+}
