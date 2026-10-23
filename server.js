@@ -21,7 +21,8 @@ const pool = DATABASE_URL
 
 async function migrate() {
   if (!pool) return;
-  await pool.query(`CREATE SCHEMA IF NOT EXISTS "${SCHEMA}"`);
+  const ex = await pool.query("SELECT 1 FROM information_schema.schemata WHERE schema_name = $1", [SCHEMA]);
+  if (!ex.rowCount) await pool.query(`CREATE SCHEMA "${SCHEMA}"`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS ${q("users")} (
       id SERIAL PRIMARY KEY,
