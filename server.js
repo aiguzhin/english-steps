@@ -56,6 +56,14 @@ async function migrate() {
 
 const app = express();
 app.set("trust proxy", 1);
+// When the site has moved, send every visitor to the new address
+if (process.env.REDIRECT_TO) {
+  const target = process.env.REDIRECT_TO.replace(/\/$/, "");
+  app.use((req, res, next) => {
+    if (req.path === "/api/health") return res.json({ ok: true, moved: target });
+    res.redirect(301, target + req.originalUrl);
+  });
+}
 app.disable("x-powered-by");
 app.use(express.json({ limit: "300kb" }));
 app.use((req, res, next) => {
@@ -333,11 +341,11 @@ app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.ht
 let dbReady = false;
 async function migrateWithRetry() {
   if (!pool) return;
-  try { await migrate(); dbReady = true; console.log("Database ready"); }
+  try { await migrate(); dbReady = true; console.log("Database ready"); await require("./copy")(pool, SCHEMA); }
   catch (e) { console.error("Database not ready, retrying in 30s:", e.message); setTimeout(migrateWithRetry, 30000); }
 }
 app.listen(PORT, () => {
   console.log(`English Steps listening on ${PORT} (db: ${pool ? "on" : "off"})`);
   migrateWithRetry();
-  setupTelegramBot();
+  if (!process.env.REDIRECT_TO) setupTelegramBot();
 });
