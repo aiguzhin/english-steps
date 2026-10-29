@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Ping the site
         env:
-          SITE_URL: ${{ vars.SITE_URL || 'https://english-steps.onrender.com' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://english-steps-app.onrender.com' }}
         run: |
           for i in 1 2 3; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$SITE_URL/api/health" || true)
